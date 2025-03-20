@@ -1,43 +1,15 @@
+import 'package:academic/src/VerifyEmailScreen.dart';
+import 'package:academic/src/home_screen_android.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'home_screen_android.dart';
 import 'register_screen.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+import 'auth_service.dart'; // Importamos el servicio de autenticación
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
   _LoginScreenState createState() => _LoginScreenState();
-}
-
-class AuthService {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
-
-  Future<User?> signInWithGoogle() async {
-    try {
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) return null; // El usuario canceló
-
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-      final AuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      final UserCredential userCredential = await _auth.signInWithCredential(
-        credential,
-      );
-      return userCredential.user;
-    } catch (e) {
-      // ignore: avoid_print
-      print("Error en Google Sign-In: $e");
-      return null;
-    }
-  }
 }
 
 class _LoginScreenState extends State<LoginScreen> {
@@ -45,37 +17,57 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController passwordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  bool obscurePassword = true; // 🔹 Controla si la contraseña está oculta o no
+  bool obscurePassword = true;
+  final AuthService _authService = AuthService();
 
   Future<void> _login() async {
     if (_formKey.currentState!.validate()) {
       try {
-        await FirebaseAuth.instance.signInWithEmailAndPassword(
+        UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: emailController.text,
           password: passwordController.text,
         );
-        // ignore: use_build_context_synchronously
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Inicio de sesión exitoso")),
-        );
-        Navigator.pushReplacement(
-          // ignore: use_build_context_synchronously
-          context,
-          MaterialPageRoute(builder: (context) => const HomeScreenAndroid()),
-        );
+
+        User? user = userCredential.user;
+        if (user != null) {
+          if (user.emailVerified) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const HomeScreenAndroid()),
+            );
+          } else {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const VerifyEmailScreen()),
+            );
+          }
+        }
       } catch (e) {
-        ScaffoldMessenger.of(
-          // ignore: use_build_context_synchronously
-          context,
-        ).showSnackBar(SnackBar(content: Text("Error: ${e.toString()}")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error: ${e.toString()}")),
+        );
       }
+    }
+  }
+
+  Future<void> _loginWithGoogle() async {
+    UserCredential? userCredential = await _authService.signInWithGoogle();
+    if (userCredential != null) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeScreenAndroid()),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Error al iniciar sesión con Google")),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Inicio de Sesión")),
+      appBar: AppBar(title: const Text("Iniciar Sesión")),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -100,8 +92,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 16.0),
               TextFormField(
                 controller: passwordController,
-                obscureText:
-                    obscurePassword, // 🔹 Se oculta o muestra la contraseña
+                obscureText: obscurePassword,
                 decoration: InputDecoration(
                   labelText: "Contraseña",
                   border: const OutlineInputBorder(),
@@ -116,56 +107,24 @@ class _LoginScreenState extends State<LoginScreen> {
                     },
                   ),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return "Ingrese una contraseña";
-                  }
-                  return null;
-                },
               ),
               const SizedBox(height: 24.0),
               ElevatedButton(
                 onPressed: _login,
                 child: const Text("Iniciar Sesión"),
               ),
+              const SizedBox(height: 16.0),
               ElevatedButton.icon(
-                onPressed: () async {
-                  User? user = await AuthService().signInWithGoogle();
-                  if (user != null) {
-                    Navigator.pushReplacement(
-                      // ignore: use_build_context_synchronously
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const HomeScreenAndroid(),
-                      ),
-                    );
-                  } else {
-                    // ignore: use_build_context_synchronously
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("Error al iniciar sesión con Google"),
-                      ),
-                    );
-                  }
-                },
-                icon: Image.asset(
-                  "assets/google.png",
-                  height: 24.0,
-                ), // Agrega un icono de Google
+                onPressed: _loginWithGoogle,
+                icon: Image.asset("assets/google_logo.png", width: 24),
                 label: const Text("Iniciar sesión con Google"),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.black,
-                ),
               ),
               const SizedBox(height: 16.0),
               TextButton(
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (context) => const RegisterScreen(),
-                    ),
+                    MaterialPageRoute(builder: (context) => const RegisterScreen()),
                   );
                 },
                 child: const Text("¿No tienes cuenta? Regístrate"),

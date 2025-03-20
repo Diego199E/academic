@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+import 'auth_service.dart';
 import 'login_screen.dart';
-import 'home_screen_android.dart'; // Asegúrate de importar la pantalla de inicio
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -14,9 +13,11 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  final TextEditingController confirmPasswordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  bool obscurePassword = true; // 🔹 Controla la visibilidad de la contraseña
+  bool obscurePassword = true;
+  final AuthService _authService = AuthService();
 
   Future<void> _register() async {
     if (_formKey.currentState!.validate()) {
@@ -26,7 +27,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           password: passwordController.text,
         );
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Registro exitoso")),
+          const SnackBar(content: Text("Registro exitoso. Verifique su correo.")),
         );
         Navigator.pushReplacement(
           context,
@@ -41,28 +42,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Future<void> _registerWithGoogle() async {
-    try {
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) return; // El usuario canceló el login
-
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      final AuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      // ignore: unused_local_variable
-      final UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
-
-      // Si el usuario se autentica correctamente, redirigir a la pantalla principal
-      if (!mounted) return;
+    UserCredential? userCredential = await _authService.signInWithGoogle();
+    if (userCredential != null) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const HomeScreenAndroid()),
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
       );
-    } catch (e) {
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error al registrar con Google: ${e.toString()}")),
+        const SnackBar(content: Text("Error al registrarse con Google")),
       );
     }
   }
@@ -111,10 +99,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return "Ingrese una contraseña";
-                  } else if (value.length < 6) {
+                  if (value == null || value.length < 6) {
                     return "La contraseña debe tener al menos 6 caracteres";
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16.0),
+              TextFormField(
+                controller: confirmPasswordController,
+                obscureText: obscurePassword,
+                decoration: InputDecoration(
+                  labelText: "Confirmar Contraseña",
+                  border: const OutlineInputBorder(),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      obscurePassword ? Icons.visibility_off : Icons.visibility,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        obscurePassword = !obscurePassword;
+                      });
+                    },
+                  ),
+                ),
+                validator: (value) {
+                  if (value != passwordController.text) {
+                    return "Las contraseñas no coinciden";
                   }
                   return null;
                 },
@@ -127,17 +138,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 16.0),
               ElevatedButton.icon(
                 onPressed: _registerWithGoogle,
-                icon: Image.asset('assets/google.png', height: 24), // 🔹 Logo de Google
+                icon: Image.asset("assets/google_logo.png", width: 24),
                 label: const Text("Registrarse con Google"),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.black,
-                ),
               ),
               const SizedBox(height: 16.0),
               TextButton(
                 onPressed: () {
-                  Navigator.pop(context);
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => const LoginScreen()),
+                  );
                 },
                 child: const Text("¿Ya tienes cuenta? Inicia sesión"),
               ),
