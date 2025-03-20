@@ -12,7 +12,12 @@
           "package_name": "academic.android"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "380921306547-pk3jgp29cave6nrqoip5jbifhduqrn2l.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDl591VEpQVUh-fkiPPxGL1pi6nysd_hts"
@@ -20,7 +25,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "380921306547-pk3jgp29cave6nrqoip5jbifhduqrn2l.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "380921306547-u1217gb8ak5v0ojkacu1i8l14oirgeld.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "academic"
+              }
+            }
+          ]
         }
       }
     }
