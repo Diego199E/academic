@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "380921306547",
+    "project_id": "academic-dbb22",
+    "storage_bucket": "academic-dbb22.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:380921306547:android:7345bec43ab676a16d7fc6",
+        "android_client_info": {
+          "package_name": "academic.android"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDl591VEpQVUh-fkiPPxGL1pi6nysd_hts"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
