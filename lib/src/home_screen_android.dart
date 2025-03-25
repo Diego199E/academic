@@ -11,49 +11,77 @@ class HomeScreenAndroid extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Pantalla Principal"),
+        title: const Text("Titulo"),
         backgroundColor: Colors.green,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.exit_to_app),
-            onPressed: () async {
-              await FirebaseAuth.instance.signOut();
-              if (!context.mounted) return;
-
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (context) => const LoginScreen()),
-                (route) => false,
-              );
-            },
+          Row(
+            children: [
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.person),
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: 'welcome',
+                    child: Text('Bienvenido, ${user?.email ?? "Usuario"}')
+                  ),
+                  const PopupMenuItem(
+                    value: 'edit_profile',
+                    child: Text('Editar perfil'),
+                  ),
+                ],
+              ),
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.menu),
+                onSelected: (value) async {
+                  if (value == 'logout') {
+                    await FirebaseAuth.instance.signOut();
+                    if (!context.mounted) return;
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (context) => const LoginScreen()),
+                      (route) => false,
+                    );
+                  }
+                },
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: 'option1',
+                    child: Text('Opción 1'),
+                  ),
+                  const PopupMenuItem(
+                    value: 'option2',
+                    child: Text('Opción 2'),
+                  ),
+                  const PopupMenuItem(
+                    value: 'option3',
+                    child: Text('Opción 3'),
+                  ),
+                  const PopupMenuItem(
+                    value: 'logout',
+                    child: Text('Cerrar sesión'),
+                  ),
+                ],
+              ),
+            ],
           ),
         ],
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              user != null ? "Bienvenido, ${user.email}" : "Usuario no autenticado",
-              style: const TextStyle(fontSize: 18),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () async {
-                await FirebaseAuth.instance.signOut();
-                if (!context.mounted) return;
-
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LoginScreen()),
-                  (route) => false,
-                );
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-              child: const Text("Cerrar Sesión"),
-            ),
-          ],
-        ),
+      body: GridView.count(
+        crossAxisCount: 1,
+        childAspectRatio: 1,
+        children: [
+          Container(
+            margin: const EdgeInsets.all(10),
+            color: Colors.grey[300],
+            alignment: Alignment.center,
+            child: const Text("Noticias", style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+          Container(
+            margin: const EdgeInsets.all(10),
+            color: Colors.grey[300],
+            alignment: Alignment.center,
+            child: const Text("Carrusel de imágenes", style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
       ),
     );
   }

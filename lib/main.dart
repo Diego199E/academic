@@ -1,8 +1,8 @@
-import 'package:academic/src/login_screen.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
-
+import 'package:academic/services/auth_check.dart';
 
 // 🔹 Configuración para Web
 const FirebaseOptions firebaseOptions = FirebaseOptions(
@@ -27,6 +27,16 @@ void main() async {
     );
   }
 
+  // 🔹 Cambiar el título de la pestaña en Flutter Web
+  if (kIsWeb) {
+    SystemChrome.setApplicationSwitcherDescription(
+      const ApplicationSwitcherDescription(
+        label: 'Academic', // Nombre en la pestaña
+        primaryColor: 0xFF42A5F5, // Color del tema
+      ),
+    );
+  }
+
   runApp(const MyApp());
 }
 
@@ -37,7 +47,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const LoginScreen(),
+      title: 'Mi Aplicación Académica', // 🔹 También cambia el título aquí
+      home: const AuthCheck(),
     );
   }
 }
